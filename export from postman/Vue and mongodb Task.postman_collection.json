@@ -1,0 +1,59 @@
+{
+	"info": {
+		"_postman_id": "ce2c7c74-b9ab-48b0-bbec-29946330f531",
+		"name": "Vue and mongodb Task",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Get All Data For Vue App",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "127.0.0.1:3000/api/lessons",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"lessons"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "sort all lessons",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "127.0.0.1:3000/api/lessons?sort=des",
+					"host": [
+						"127",
+						"0",
+						"0",
+						"1"
+					],
+					"port": "3000",
+					"path": [
+						"api",
+						"lessons"
+					],
+					"query": [
+						{
+							"key": "sort",
+							"value": "des"
+						}
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
