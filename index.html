@@ -1,0 +1,335 @@
+<html>
+    <head>
+        <title>After school club</title>
+    </head>
+    <body>
+        
+        <script src="https://unpkg.com/vue"> </script>
+
+        <script type="module">
+          
+            var webstore = new Vue({ // root of the vue instance
+                el: '#app', // link to element in div tags
+                data: {
+                    sitename: 'After school club',
+                    showProduct: true,
+                    product : "products",
+                    defaultSort : "ascending",
+                    cart: [], //cart array
+                    isCartEmpty: true,
+                    sortBy:"Location",
+                    checkoutPage: true,
+                    order: {
+                        firstName: '',
+                        lastName: '',
+                        address: '',
+                        city: '',
+                        state:'',
+                        postcode: '',
+                        gift: '',
+                        method: 'home',
+                        sendGift: 'Send as a Gift',
+                        dontSendGift: 'Do not send as a gift',
+                    }
+                    
+                },
+                
+                methods: {
+
+                    //shopping cart 
+
+                    shoppingCart(){
+                        
+                        this.showCheckout();
+
+                    },
+
+                    addToCart: async function(e){
+                       let item = JSON.parse(e.target.value);
+                       
+                       if(item.availableSpaces == 1){
+                        e.target.disabled = true;
+                       }
+                      
+                       item.availableSpaces = item.availableSpaces-1;
+                     
+                       let allProducts = this.product.filter((element)=> {
+                           return element.id !== item.id;
+                        });
+                       
+                       this.product = [...allProducts,item];
+                      
+                       
+                       this.cart.push(item);
+                       let res = await fetch("http://127.0.0.1:3000/api/lessons",{
+                                method: 'POST',
+                                cache: 'no-cache', 
+                                credentials: 'same-origin', 
+                                headers: {
+                                'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify(this.cart), 
+                        });
+                       console.log(JSON.stringify(this.cart));
+                    },
+
+                    removeFromCart(e){
+                        let currentItem = JSON.parse(e.target.value);
+                        let copyCart = [...this.cart];
+                        let newCart = copyCart.filter((element) => element.id !== currentItem.id);
+                        this.cart = newCart;
+                    },
+                    
+                    checkoutPageShow(){
+                        if (this.showProduct) {
+                            this.showProduct = false;
+                            this.checkoutPage = false;
+                        } 
+                        else {
+                            this.showProduct = true ;
+                            this.checkoutPage = true;
+                        }
+                    },
+                    showCheckout: function() {
+                        if (this.showProduct) {
+                            this.showProduct = false;
+                            this.checkoutPage = false;
+                        } 
+                        else {
+                            this.showProduct = true ;
+                            this.checkoutPage = true;
+
+                            
+                        }; // this will switch the values
+                    },
+                    submitForm(e) {
+                        e.preventDefault();
+                        alert("ORDER CONFIRMED");
+                    },
+                    intialSort(e){// default sorting by ascending and descending order
+                        if(e.target.value == "ascending"){
+                            
+                           let ascending=[];
+                           for(let i=this.product.length-1; i>=0; i--){
+                                ascending.push(this.product[i]);
+                            }
+                            this.product = [...ascending];
+
+                        }
+                        else if(e.target.value == "descending"){
+                          
+                            let descending=[];
+                            for(let i=this.product.length-1; i >= 0  ; i--){
+                                descending.push(this.product[i]);
+                            }
+                            this.product = [...descending];
+
+                        }
+                    },
+                    
+                    allSort(e){ // sort by location, price, available, subject
+                        
+
+                        switch(e.target.value){
+                               
+                            case "Price":  //sort by low to high price
+                                
+                                let priceArray = [...this.product];
+                                for(let i=0; i < priceArray.length; i++){
+                                    for(let j=0; j < priceArray.length; j++){
+                                        let temp ;
+                                        if(priceArray[i].price <= priceArray[j].price){
+                                            temp = priceArray[i];
+                                            priceArray[i] = priceArray[j];
+                                            priceArray[j] = temp;
+                                        }
+                                    }
+                                }
+                                //return the new sorted array
+                                this.product = priceArray;
+                                break;
+                                
+                            case "Subject": 
+                               
+                                let subjectArray = [...this.product];
+                                //get the name of all the subjects
+                                let nameOfSubjects = subjectArray.map((element)=>element.subject)
+                                let sortedName = nameOfSubjects.sort(); //sort subject name
+                                
+
+                                let newArrayProducts = [];
+                                //get the subject data
+                                for(let i=0;i < subjectArray.length; i++){
+                                    for(let j=0; j < subjectArray.length; j++){
+                                        if(subjectArray[j].subject == sortedName[i]){
+                                            newArrayProducts.push(subjectArray[j]);
+                                        }
+                                        
+                                    }
+                                }
+                                //return new subject array
+                                this.product = newArrayProducts;
+
+                                break;
+
+                            case "Available": 
+                                let sortByAvailable = [...this.product];
+                                let availableArray = sortByAvailable.filter((e)=> e.availableSpaces != 0);
+                                this.product = availableArray;
+
+                                break;
+
+                            case "Location": 
+                                break;    
+                        }
+                    }
+                },
+
+                computed: { //computed property object
+                    cartItemCount: function (){
+                        this.isCartEmpty = this.cart.length > 0 ? false : true; 
+                        return this.cart.length || ''; // its value will be calculated when it called
+                    },
+
+                },
+
+                async created(){
+                    // get data from our server via our REST API
+                    const response = await fetch("http://127.0.0.1:3000/api/lessons");
+                    const data = await response.json();
+                    this.product = data;
+                } 
+            });
+            </script>
+
+
+
+        <div id="app">
+            <header>
+                <h1 v-text="sitename"></h1>
+                <!-- <button v-on:click='showCheckout'>
+                     Check Out
+                </button> -->
+                <br>
+                <br>
+               
+                    <button v-on:click='shoppingCart' :disabled="isCartEmpty">Shopping Cart {{cartItemCount}} </button>
+                    <button v-on:click='checkoutPageShow' :disabled="checkoutPage"> Back </button>
+               
+                <br>
+                <br>
+                <input v-on:change="intialSort" type="radio" id="ac" value="ascending" v-model="defaultSort" >
+                <label for="ac" >Ascending</label>
+                <input v-on:change="intialSort" type="radio" id="dc" value="descending" v-model="defaultSort">
+                <label for="dc">Descending</label>
+                <br>
+
+
+                <input v-on:change="allSort" type="radio" id="Subject" value="Subject" v-model="sortBy" >
+                <label for="Subject" >Subject</label>
+
+                <input v-on:change="allSort" type="radio" id="Location" value="Location" v-model="sortBy" >
+                <label for="Location" >Location</label>
+
+                <input v-on:change="allSort" type="radio" id="Price" value="Price" v-model="sortBy" >
+                <label for="Price" >Price</label>
+
+                <input v-on:change="allSort" type="radio" id="Available" value="Available" v-model="sortBy" >
+                <label for="Available" >Available</label>
+
+            </header>
+            <div v-if='showProduct'> <!--this is the product page-->
+                
+                <div v-for="p in product" :key="p.id" style="float: left; padding: 35px;">
+                    <h1 v-text="p.subject"></h1>  <!--This section is for the subject english-->
+                    <img v-bind:src="p.image" height="125px" width="125px">
+                    <p v-text="p.location"></p>
+                    <p>Price: £{{p.price}} per hour</p>
+                    <p>Spaces available: {{p.availableSpaces}}</p>
+                    <button v-on:click="addToCart" :value="JSON.stringify(p)"> Add to cart</button>
+                </div>
+
+            </div>
+
+            <div v-else> <!--shows checkout page-->
+                <h2>Check Out</h2>
+
+                <div v-for="c in cart" :key="c.subject" style="border: 1px solid #afafaf">
+                    <h1 v-text="c.subject"></h1>  <!--This section is for the subject english-->
+                    <!-- <img v-bind:src="p.image" height="125px" width="125px"> -->
+                    <p v-text="c.location"></p>
+                    <p>Price: £{{c.price}} per hour</p>
+                    <button v-on:click="removeFromCart" :value="JSON.stringify(c)"> Remove </button>
+                </div>
+
+
+                <br>
+                <br>
+                <div>
+                <form @submit="submitForm" >
+
+                <p>
+                    <strong>First Name:</strong>
+                    <input v-model.trim='order.firstName' type="text" required>
+                </p>
+                <p>
+                    <strong>Last Name:</strong>
+                    <input v-model.trim='order.lastName'>
+                </p>
+                <p>
+                    <strong>Address:</strong>
+                    <input v-model='order.address'>
+                </p>
+                <p>
+                    <strong>City:</strong>
+                    <input v-model='order.city'>
+                </p>
+                <p>
+                    <strong>State: </strong>
+                        <select v-model='order.State'>
+                            <option disabled value="">State</option>
+                            <option value=>AL</option>
+                            <option value=>AR</option>
+                            <option value=>CA</option>
+                            <option value=>NV</option>
+                        </select>
+                </p>
+                <p>
+                    <strong>ZIP/Postcode:</strong>
+                    <input v-model='order.ZIP'>
+                </p>
+                <p>
+                    <strong>Phone Number:</strong>
+                    <input v-model.number='order.phonenumber' type="number" required>
+                </p>
+                <p>
+                    <input type="Checkbox" id='gift' v-model='order.gift' 
+                    :true-value= 'order.sendGift' :false-value= 'order.dontSendGift'>
+                     <label for='gift'>Ship as a gift?</label>
+                </p>
+                <p>
+                    <input type="radio" id='home' value='home' v-model='order.method'>
+                    <label for="home">Home</label>
+                    <input type="radio" id='business' value='business' v-model='order.method'>
+                    <label for="business">Business</label>
+                </p>
+                <h2>Confirmation of Customer Details</h2>
+                <p>First Name: {{order.firstName}}</p>
+                <p>Last Name: {{order.lastName}}</p>
+                <p>Address: {{order.address}}</p>
+                <p>City: {{order.city}}</p>
+                <p>State: {{order.state}}</p>
+                <p>Postcode: {{order.ZIP}}</p>
+                <p>Phone Number: {{order.phonenumber}}</p>
+                <p>Ship as a gift?: {{order.gift}}</p>
+                
+                <button type="submit">Submit Your Order</button>
+            </form>
+
+            </div>
+        </div>
+
+
+
+    </body>
+</html>
