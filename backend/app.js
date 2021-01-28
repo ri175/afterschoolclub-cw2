@@ -28,7 +28,7 @@ dotenv.config({path:"./config.env"});
 //used mongodb client for database connection to mongodb atlas
 const {MongoClient} = require('mongodb');
 const { json } = require("express");
-//created a 
+//created a collection for mongodb collections 
 let collections;
 
 let sortedData ;
